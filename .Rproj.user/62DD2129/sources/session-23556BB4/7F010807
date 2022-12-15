@@ -3,7 +3,7 @@
     "path": "~/Desktop/620final/bis620.2022/README.Rmd",
     "project_path": "README.Rmd",
     "type": "r_markdown",
-    "hash": "0",
+    "hash": "1964522736",
     "contents": "",
     "dirty": false,
     "created": 1671122727192.0,
@@ -12,15 +12,15 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "38,0",
+        "cursorPosition": "39,33",
         "scrollLine": "0"
     },
     "folds": "",
-    "lastKnownWriteTime": 1671123228,
+    "lastKnownWriteTime": 1671123419,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1671123228006,
+    "last_content_update": 1671123419119,
     "read_only": false,
     "read_only_alternatives": []
 }

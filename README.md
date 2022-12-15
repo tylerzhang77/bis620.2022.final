@@ -28,9 +28,9 @@ logit_test('DTH', 'ATRT', df)
 
 ## Vignette
 
-You can read the statistical report from the vignette of this package
-
-The vignette is under the filename `vig.html` in the main folder.
+You can read the statistical report from the vignette of this package.
+The vignette is under the name of `vig.html` in the main folder. You
+need to open it in a browser.
 
 You can also use the code below to build the vignette to read.
 
