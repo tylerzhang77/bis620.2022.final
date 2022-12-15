@@ -1,0 +1,4 @@
+"0","# Summary of variable C_AGE"
+"0","df |> "
+"0","  select(C_AGE) |>"
+"0","  tbl_summary()"

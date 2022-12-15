@@ -1,0 +1,78 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
+Try executing this chunk by clicking the *Run* button within the chunk or by placing your cursor inside it and pressing *Cmd+Shift+Enter*. 
+
+```{r}
+load(file = "adsl.rda")
+```
+```{r}
+# First show the adsl data 
+df
+```
+## 1. Background and motivation
+The dataset is from Panitumumab Randomized Trial in Combination With Chemotherapy for Metastatic Colorectal Cancer.
+The study type is Interventional study. The study purpose is to get the treatment effect of panitumumab in combination with FOLFOX compared to FOLFOX alone as first line therapy for metastatic colorectal cancer. The treatment group is using drug of Panitumumab and FOLFOX regimen, the control group only use the drug of FOLFOX regimen. There are 1183 participants in the study, and they are allocated to either treatment group or control group randomly.
+The primary outcome measure is progression-free survival (PFS). According to the study of the primary outcome, PFS in the Wild-type KRAS Efficacy Analysis Set was compared at a significance level of 5%.
+and the secondary outcome measures include overall survival, percentage of participants with an objective response, time to progression, duration of response, and number of participants with adverse events (AEs).
+Only people who are18 years and older are included in the study.
+
+
+
+```{r}
+colSums(is.na(df))
+```
+According to the summary of missing value above, only "DIAGMONS", "B_HEIGHT", and "B_METANM" have missing value. We are not going to use these 3 variables in further analysis, so we are not going to remove the missing values of these 3 variables.
+
+Below is the summary of outcomes (Death), assigned treatment, and possible confounders (AGE, SEX, and RACE).
+```{r}
+df |> 
+  select(ATRT, DTH, AGE, SEX, RACE) |>
+  tbl_summary()
+```
+
+```{r}
+# Plot histogram of the AGE variable
+library(ggplot2)
+ggplot(df, aes(x=AGE)) + 
+  geom_histogram(bins = 20)
+print(max(df$AGE))
+print(min(df$AGE))
+```
+
+```{r}
+# Convert AGE (max = 85, min = 27) to categorical variable C_AGE
+# Patients between 26 and 45 years old are assigned to group 1: "26-45", patients between 46 and 65 years old are assigned to group 2: "45-65", patients between 6 6and 85 years old are assigned to group 3: "66-85"
+df$C_AGE <- "26-45"
+df$C_AGE[df$AGE >45 & df$AGE <=65] <- "46-65"
+df$C_AGE[df$AGE >=65] <- "66-85"
+df$AGE1 <- ifelse(df$C_AGE == "26-45", 1, 0)
+df$AGE2 <- ifelse(df$C_AGE == "46-65", 1, 0)
+
+```
+
+```{r}
+# Summary of variable C_AGE
+df |> 
+  select(C_AGE) |>
+  tbl_summary()
+```
+
+
+
+```{r}
+library(aod)
+mylogit <- glm(DTH ~ ATRT + SEX + C_AGE + RACE, data = df, family = "binomial")
+summary(mylogit)
+confint(mylogit)
+#wald.test(b = coef(mylogit), Sigma = vcov(mylogit), Terms=1:9)
+```
+Then we apply logistic regression model to get a sense of the relationship between outcome and variables. Our primary focus has been the Actual Treatment. 
+
+
+
+

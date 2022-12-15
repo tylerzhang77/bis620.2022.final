@@ -1,0 +1,354 @@
+---
+title: "Data visualization and analysis"
+author: "Tianyao Zhang"
+date: "6/16/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(readxl)
+library(ggplot2)
+```
+
+# Data import 
+```{r}
+data <- read_xlsx('data.xlsx')
+```
+
+This data set contains mortality information for NEMG patients from 2020 and 2021.
+
+* Column description:
+  + level: Risk level categorized by risk factor. A higher risk level means the patient is in worse conditions.
+  + year:  The year that the observation started from.
+  + duration: Length of the observation.
+  + total: Total number of patients in each category.
+  + death: Number of death in each category.
+  
+```{r}
+data <- data.frame(data)
+data$level <- as.factor(data$level)
+data$duration <- as.factor(data$duration)
+data$year <- as.factor(data$year)
+data
+```
+
+Then, we need to import the age stratified data set. Here, we are using the 2020 18 month data. The _age_ column contains information about age groups. 
+```{r}
+data_age <- read_xlsx('age_strat_2020_18month_data.xlsx')
+```
+
+```{r}
+data_age <- data.frame(data_age)
+data_age$level <- as.factor(data_age$level)
+data_age$age <- as.factor(data_age$age)
+data_age
+```
+
+# Visualization
+
+* Formula for mortality calculation: $\frac{number\ of\ death}{total\ number\ of\ participants}$.
+
+* Formula for standard error calculation: $\sqrt{\frac{p*(1-p)}{n}}$, where n is the sample size and p is the chance of death.
+```{r}
+data$mortality = round(data$death / data$total, 4)
+data$standard_error = sqrt((data$death / data$total)*(1-data$death / data$total)/data$total)
+data_age$mortality = round(data_age$death / data_age$total, 4)
+data_age$standard_error = sqrt((data_age$death / data_age$total)*(1-data_age$death / data_age$total)/data_age$total)
+```
+
+```{r}
+# mortality rate for year 2020, duration 12 months
+sub_202012 = data[which((data$year == 2020) & (data$duration == 12)), ]
+ggplot(data=sub_202012, aes(x=level, y=mortality, group = 1)) +
+  geom_point(color = 'deepskyblue') + 
+  geom_line(color = 'deepskyblue') +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Mortality rate change between levels for 2020 - 12 months data',
+       x = 'Risk level', y = 'Mortality rate')+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1), size = 3.5)+
+  theme_minimal()
+```
+
+```{r}
+# mortality rate for year 2020, duration 18 months
+sub_202018 = data[which((data$year == 2020) & (data$duration == 18)), ]
+ggplot(data=sub_202018, aes(x=level, y=mortality, group = 1)) +
+  geom_point(color = 'deepskyblue') + 
+  geom_line(color = 'deepskyblue') +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Mortality rate change between levels for 2020 - 18 months data',
+       x = 'Risk level', y = 'Mortality rate')+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1), size = 3.5)+
+  theme_minimal()
+```
+
+```{r}
+# mortality rate for year 2020, duration 12 months
+sub_202024 = data[which((data$year == 2020) & (data$duration == 24)), ]
+ggplot(data=sub_202024, aes(x=level, y=mortality, group = 1)) +
+  geom_point(color = 'deepskyblue') + 
+  geom_line(color = 'deepskyblue') +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Mortality rate change between levels for 2020 - 24 months data',
+       x = 'Risk level', y = 'Mortality rate')+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1), size = 3.5)+
+  theme_minimal()
+```
+
+```{r}
+# mortality rate for year 2020
+sub_2020 = data[which(data$year == 2020), ]
+ggplot(data=sub_2020, aes(x=level, y=mortality, group = duration, color = duration)) +
+  geom_point() + 
+  geom_line() +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Mortality rate change between levels across different durations for 2020 data',
+       x = 'Risk level', y = 'Mortality rate')+
+  scale_color_manual(labels = c("12 month", '18 month', '24 month'),
+                     values = c("cyan3", "darkorchid1", "darkorange1"))+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1),
+            size = 3, check_overlap = TRUE)+
+  theme_minimal()
+```
+
+```{r}
+# comparison between 2020 and 2021 with 12 month duration 
+sub_20202021_12 = data[which(data$duration == 12), ]
+ggplot(data=sub_20202021_12, aes(x=level, y=mortality, group = year, color = year)) +
+  geom_point() + 
+  geom_line() +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Mortality rate at 12 month for 2020 and 2021 data',
+       x = 'Risk level', y = 'Mortality rate')+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1),
+            size = 3, check_overlap = TRUE)+
+  scale_color_manual(labels = c("2020", "2021"),
+                     values = c("darkorchid1", "darkorange1"))+
+  theme_minimal()
+```
+
+```{r}
+# age-stratified mortality rate for 2020 18 month data
+ggplot(data=data_age, aes(x=level, y=mortality, group = age, color = age)) +
+  geom_point() + 
+  geom_line() +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Age-stratified mortality rate change between levels for 2020 18 month data',
+       x = 'Risk level', y = 'Mortality rate')+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1),
+            size = 2, check_overlap = TRUE)+
+  theme_minimal()
+```
+
+# Statistical test
+
+## Question 1: Is the level 7 and level 7* mortality significantly different for the 12 month 2020 data?
+
+I will conduct hypothesis test for two sample proportions. Here we assume that the two groups are independent. 
+
+* Test statistics: $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}$, where $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}$. $x_1$ and $x_2$ are number of death in each group. $n_1$ and $n_2$ are sample size in each group.
+
+* The test statistics follows a standard normal distribution.
+
+### Test hypothesis
+
+Null hypothesis: $H_0: p_1 = p_2$.\  
+
+Alternate hypothesis: $H_a: p_1 \ne p_2$\  
+
+### Calculation 
+
+```{r}
+data[which(data$year == 2020 & data$level == c('7', '7*') & data$duration == 12), ]
+```
+* Test statistics calculation:
+  + $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}=\frac{708+108}{4872+342}=0.1565017$
+  + $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}=\frac{0.1453-0.3158}{\sqrt{0.1565017*(1-0.1565017)*(\frac{1}{4872}+\frac{1}{342})}}=-605.7444$
+
+* p-value calculation: p-value is close to 0 
+```{r}
+z = -605.7444
+paste('The calculated p-value is', 2 * min(pnorm(z), 1-pnorm(z)))
+```
+
+### Conclusion
+
+Since the p-value is close to 0, which is well below 0.05, we can reject the null hypothesis. In conclusion, the two proportions, which is the mortality rate, are significantly different. The mortality rate between level 7 and level 7* are significantly different for the 2020 12 month data.
+
+## Question 2: Is the level 7 and level 7* mortality significantly different for the 18 month 2020 data?
+
+Same test as in question 1.
+
+* Test statistics: $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}$, where $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}$. $x_1$ and $x_2$ are number of death in each group. $n_1$ and $n_2$ are sample size in each group.
+
+* The test statistics follows a standard normal distribution.
+
+### Test hypothesis
+
+Null hypothesis: $H_0: p_1 = p_2$.\  
+
+Alternate hypothesis: $H_a: p_1 \ne p_2$\  
+
+### Calculation 
+
+```{r}
+data[which(data$year == 2020 & data$level == c('7', '7*') & data$duration == 18), ]
+```
+* Test statistics calculation:
+  + $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}=\frac{989+138}{4872+341}=0.2161903$
+  + $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}=\frac{0.2030-0.4047}{\sqrt{0.2161903*(1-0.2161903)*(\frac{1}{4872}+\frac{1}{341})}}=-631.5581$
+
+* p-value calculation: p-value is close to 0 
+```{r}
+z = -631.5581
+paste('The calculated p-value is', 2 * min(pnorm(z), 1-pnorm(z)))
+```
+
+### Conclusion
+
+Since the p-value is close to 0, which is well below 0.05, we can reject the null hypothesis. In conclusion, the two proportions, which is the mortality rate, are significantly different. The mortality rate between level 7 and level 7* are significantly different for the 2020 18 month data.
+
+## Question 3: Is the level 7 and level 7* mortality significantly different for the 24 month 2020 data?
+
+Same test as in question 1.
+
+* Test statistics: $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}$, where $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}$. $x_1$ and $x_2$ are number of death in each group. $n_1$ and $n_2$ are sample size in each group.
+
+* The test statistics follows a standard normal distribution.
+
+### Test hypothesis
+
+Null hypothesis: $H_0: p_1 = p_2$.\  
+
+Alternate hypothesis: $H_a: p_1 \ne p_2$\  
+
+### Calculation 
+
+```{r}
+data[which(data$year == 2020 & data$level == c('7', '7*') & data$duration == 24), ]
+```
+* Test statistics calculation:
+  + $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}=\frac{1178+153}{4868+341}=0.2555193$
+  + $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}=\frac{0.2420-0.4487}{\sqrt{0.2555193*(1-0.2555193)*(\frac{1}{4868}+\frac{1}{341})}}=-610.5966$
+
+* p-value calculation: p-value is close to 0 
+```{r}
+z = -610.5966
+paste('The calculated p-value is', 2 * min(pnorm(z), 1-pnorm(z)))
+```
+
+### Conclusion
+
+Since the p-value is close to 0, which is well below 0.05, we can reject the null hypothesis. In conclusion, the two proportions, which is the mortality rate, are significantly different. The mortality rate between level 7 and level 7* are significantly different for the 2020 24 month data.
+
+## Question 4: Is the level 7* mortality significantly different between the 12 month 2020 data and the 12 month 2021 data?
+
+Same test as in question 1.
+
+* Test statistics: $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}$, where $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}$. $x_1$ and $x_2$ are number of death in each group. $n_1$ and $n_2$ are sample size in each group.
+
+* The test statistics follows a standard normal distribution.
+
+### Test hypothesis
+
+Null hypothesis: $H_0: p_1 = p_2$.\  
+
+Alternate hypothesis: $H_a: p_1 \ne p_2$\  
+
+### Calculation 
+
+```{r}
+data[which(data$level == '7*' & data$duration == 12), ]
+```
+* Test statistics calculation:
+  + $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}=\frac{108+57}{342+145}=0.338809$
+  + $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}=\frac{0.3158-0.3931}{\sqrt{0.338809*(1-0.338809)*(\frac{1}{342}+\frac{1}{145})}}=-36.36936$
+
+* p-value calculation: p-value is close to 0 
+```{r}
+z = -36.36936
+paste('The calculated p-value is', 2 * min(pnorm(z), 1-pnorm(z)))
+```
+
+### Conclusion
+
+Since the p-value is close to 0, which is well below 0.05, we can reject the null hypothesis. In conclusion, the two proportions, which is the mortality rate, are significantly different. The mortality rate for level 7* between 12 month 2020 data and 12 month 2021 data are significantly different.
+
+## Question 5: Is the 80 and over age group mortality significantly different from other age groups for the 2020 12 month data?
+
+```{r}
+# age-stratified mortality rate for 2020 18 month data
+ggplot(data=data_age, aes(x=level, y=mortality, group = age, color = age)) +
+  geom_point() + 
+  geom_line() +
+  geom_errorbar(aes(ymin=mortality-standard_error, ymax=mortality+standard_error), width=.08)+
+  labs(title = 'Age-stratified mortality rate change between levels for 2020 18 month data',
+       x = 'Risk level', y = 'Mortality rate')+
+  geom_text(aes(label = mortality, vjust = -0.8, hjust = 1.1),
+            size = 2, check_overlap = TRUE)+
+  theme_minimal()
+```
+
+From the plot above, we can see that the 80 and over age group has the most similar mortality rate with the 70-79 age group. Ideally, if we can show that these two groups' mortality rate are significantly different, it is reasonable to say that the 80 and over age group has a significantly different mortality rates with all other age groups. So, I will conduct tests for each level between the 70-79 group and the 80 and over group. The test is still the same as the one used in question 1. 
+
+* Test statistics: $z=\frac{\hat{p_1}-\hat{p_2}}{\sqrt{\hat{p^*}(1-\hat{p^*})(\frac{1}{n_1}+\frac{1}{n_2})}}$, where $\hat{p^*}=\frac{x_1+x_2}{n_1+n_2}$. $x_1$ and $x_2$ are number of death in each group. $n_1$ and $n_2$ are sample size in each group.
+
+* The test statistics follows a standard normal distribution.
+
+### Test hypothesis
+
+Null hypothesis: $H_0: p_1 = p_2$.\  
+
+Alternate hypothesis: $H_a: p_1 \ne p_2$\  
+
+### Calculation 
+
+```{r}
+data_age[which(data_age$age == '70-79' | data_age$age == '80 and over'), ]
+```
+* Test statistics calculation:
+```{r}
+data_70 = data_age[which(data_age$age == '70-79'), ]
+data_80 = data_age[which(data_age$age == '80 and over'), ]
+data_7080 = merge(data_70, data_80, by = 'level')
+data_7080$merge_mort = (data_7080$death.x + data_7080$death.y) / (data_7080$total.x + data_7080$total.y) 
+data_7080$z_score = (data_7080$mortality.x - data_7080$mortality.y) / sqrt(data_7080$merge_mort*(1-data_7080$merge_mort)*(1/data_7080$total.x + 1/data_7080$total.y))
+```
+
+
+* p-value calculation: p-value is close to 0 
+```{r}
+data_7080$p_value = 2 * pnorm(data_7080$z_score, lower.tail = TRUE)
+data_7080[,c('level', 'z_score', 'p_value')]
+```
+
+### Conclusion
+
+From the output, we can see that all the p-values are well below 0.05, indicating that we can reject the null hypothesis for each of the test. In conclusion, the mortality rate for each level between the 70-79 age group and the 80 and over age group are significantly different. Then, it is safe to say the 80 and over age group has a significantly different mortality rate compared to other age groups.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

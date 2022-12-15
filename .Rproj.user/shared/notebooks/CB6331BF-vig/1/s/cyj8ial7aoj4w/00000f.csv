@@ -1,0 +1,4 @@
+"0","# Plot histogram of the AGE variable"
+"0","ggplot(df, aes(x=AGE)) + "
+"0","  geom_histogram(bins = 20)+"
+"0","  theme_minimal()"

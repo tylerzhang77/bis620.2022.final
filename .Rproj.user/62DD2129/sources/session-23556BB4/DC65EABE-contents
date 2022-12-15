@@ -1,0 +1,127 @@
+---
+title: "vig"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{vig}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(bis620.2022)
+library(dplyr)
+library(gtsummary)
+library(ggplot2)
+```
+
+## 1. Background and motivation
+
+The dataset is from Panitumumab Randomized Trial in Combination With Chemotherapy for Metastatic Colorectal Cancer. The study type is Interventional study. The study purpose is to get the treatment effect of panitumumab in combination with FOLFOX compared to FOLFOX alone as first line therapy for metastatic colorectal cancer. 
+
+The treatment group is using drug of Panitumumab and FOLFOX regimen, the control group only use the drug of FOLFOX regimen. There are 1183 participants in the study, and they are allocated to either treatment group or control group randomly. The primary outcome measure is progression-free survival (PFS). According to the study of the primary outcome, for people who have Wild-type KRAS, "FOLFOX + Panitumumab" group have a shorter progression-free survival time compared to the "FOLFOX" group; for participants who have Mutant KRAS, "FOLFOX + Panitumumab" group have a longer progression-free survival time compared to the "FOLFOX" group. Both tests are at a significance level of 5%.
+
+There is a high mortality rate of metastatic colorectal cancer (<https://www.cancer.net/cancer-types/colorectal-cancer/statistics>), so we assume "death" as the primary health outcome, and our goal is to see whether the death rate in treatment group is lower than that in the control group. During our study, there may be some confounders like "age", "sex", and "race", so our main focus has been the difference of death rate between treatment group and control group after adjusting for the possible confounders.
+
+## 2. Research question
+
+Does the panitumumab treatment along with FOLFOX provide lower mortality for patients with metastatic colorectal cancer compared with FOLFOX alone, adjusting for possible confounders?
+
+## 3. Data cleaning and exploration
+
+```{r}
+# get the data from package
+data('adsl')
+```
+
+```{r}
+# First show the adsl data 
+head(df)
+```
+
+```{r}
+colSums(is.na(df))
+```
+
+According to the summary of missing value above, only "DIAGMONS", "B_HEIGHT", and "B_METANM" have missing value. We are not going to use these 3 variables in further analysis, so we are not going to remove the missing values of these 3 variables.
+
+Below is the summary of outcomes (Death), assigned treatment, and possible confounders (AGE, SEX, and RACE).
+
+```{r}
+df |> 
+  select(ATRT, DTH, AGE, SEX, RACE) |>
+  tbl_summary()
+```
+
+From the summary information, we can see that 74% of the patients died at the study end point.
+
+In order for the convenience of future analysis, we will categorize age into categorical groups first. First, we need to look at the range of age in the dataset.
+
+```{r}
+# Plot histogram of the AGE variable
+ggplot(df, aes(x=AGE)) + 
+  geom_histogram(bins = 20)+
+  theme_minimal()
+print(max(df$AGE))
+print(min(df$AGE))
+```
+
+Age ranges from 27 to 85 in this data set. We will categerize age into three groups: '26-45', '46-65', '66-85'.
+
+```{r}
+# Convert AGE (max = 85, min = 27) to categorical variable C_AGE
+# Patients between 26 and 45 years old are assigned to group 1: "26-45", patients between 46 and 65 years old are assigned to group 2: "45-65", patients between 6 6and 85 years old are assigned to group 3: "66-85"
+df <- cleaning(df)
+```
+
+```{r}
+# Summary of variable C_AGE
+df |> 
+  select(C_AGE) |>
+  tbl_summary()
+```
+
+## 4. Analysis
+
+Next, we are going to plot barplots for potential confounders to check if it is necessary to take them into account in the statistical test.
+
+```{r}
+plot_strat(df, 'SEX')
+```
+
+From the plot, we can see that there are some discrepancies in the mortality between female and male patients. For example, male patients have relatively higher mortality in control groups.
+
+```{r}
+plot_strat(df, 'C_AGE')
+```
+
+As for age, we can expect higher mortality in older age groups. It is necessary to control for age.
+
+```{r}
+plot_strat(df, 'RACE')
+```
+
+As for race, most of the patients are white. So, it won't cause much bias for the result. However, given the fact that there are not many variables to consider in this scenario, we will include race in the analysis.
+
+We will use logistic regression to model the death outcome. In the analysis, we will include age, race and sex as potential confounders to mitigate bias.
+
+```{r}
+# conduct statistical test
+logit_test('DTH', c('ATRT', 'C_AGE', 'SEX', 'RACE'), df)
+```
+
+## 5. Interpretation and Conclusion
+
+Finally, we applied logistic regression model to get a sense of the relationship between death outcome and treatment allocation. We also take into account potential confounders like age, race and sex (all encoded into categorical variables).
+
+According to the summary, the p-value for the treatment variable is 0.453, which is above 0.05. This indicates that after adjusting for potential confounders, the mortality of treatment group and control group are not significantly different. 
+
+However, it is meaningful if we look at the confidence interval of the "ATRT". The lower bound of the confidence level has a larger absolute value (0.40697) compared to that of the upper bound (0.18117), and the estimate coefficient for the treatment variable is negative (-0.11). This means that the treatment group has lower odds ratio for death compared to the control group, even though it is not statistically significant. The treatment plan can to some extent decrease the mortality for people who have metastatic colorectal cancer. 
+
+In conclusion, the panitumumab treatment along with FOLFOX provide can to some extent lower mortality for patients with metastatic colorectal cancer compared with FOLFOX alone, adjusting for possible confounders. However, this is not statistically significant. 

@@ -1,0 +1,32 @@
+{
+    "id": "9CD627EF",
+    "path": "~/Desktop/620final/bis620.2022/vignettes/vig.Rmd",
+    "project_path": "vignettes/vig.Rmd",
+    "type": "r_markdown",
+    "hash": "0",
+    "contents": "",
+    "dirty": false,
+    "created": 1671121418105.0,
+    "source_on_save": false,
+    "relative_order": 1,
+    "properties": {
+        "source_window_id": "",
+        "Source": "Source",
+        "cursorPosition": "99,0",
+        "scrollLine": "96",
+        "last_setup_crc32": "23556BB463f31029",
+        "rmdVisualMode": "false",
+        "rmdVisualCollapsedChunks": "",
+        "rmdVisualModeLocation": "4551:5677.77783203125",
+        "rmdVisualWrapConfigured": "true",
+        "docOutlineVisible": "1"
+    },
+    "folds": "",
+    "lastKnownWriteTime": 1671120162,
+    "encoding": "UTF-8",
+    "collab_server": "",
+    "source_window": "",
+    "last_content_update": 1671120162,
+    "read_only": false,
+    "read_only_alternatives": []
+}
